@@ -1,0 +1,35 @@
+# Entornos virtuales
+venv/
+env/
+.my-venv/
+my-venv/
+
+# Archivos de entorno
+.env
+.python-version
+
+# Archivos temporales / caché de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+
+# Archivos de compilación
+build/
+dist/
+*.egg-info/
+
+# IDEs y editores
+.vscode/
+.idea/
+*.swp
+
+# Datos generados
+vectorstore/
+*.db
+*.log
+
+# Otros
+.DS_Store
+Thumbs.db

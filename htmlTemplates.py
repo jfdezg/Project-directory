@@ -1,53 +1,34 @@
 css = '''
 <style>
-.chat-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.2rem;
-    padding: 1rem;
-}
-
 .chat-message {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    background-color: #f1f1f1;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1rem; display: flex
 }
-
 .chat-message.user {
-    background-color: #d1e7dd;
-    align-self: flex-end;
+    background-color: #2b313e
 }
-
 .chat-message.bot {
-    background-color: #ffffff;
-    align-self: flex-start;
+    background-color: #475063
 }
-
+.chat-message .avatar {
+  width: 20%;
+}
 .chat-message .avatar img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
+  max-width: 78px;
+  max-height: 78px;
+  border-radius: 50%;
+  object-fit: cover;
 }
-
 .chat-message .message {
-    max-width: 85%;
-    color: #212529;
-    font-size: 1rem;
-    line-height: 1.5;
-    white-space: pre-wrap;
+  width: 80%;
+  padding: 0 1.5rem;
+  color: #fff;
 }
-</style>
 '''
 
 bot_template = '''
 <div class="chat-message bot">
     <div class="avatar">
-        <img src="https://i.ibb.co/cN0nmSj/Screenshot-2023-05-28-at-02-37-21.png">
+        <img src="https://i.ibb.co/cN0nmSj/Screenshot-2023-05-28-at-02-37-21.png" style="max-height: 78px; max-width: 78px; border-radius: 50%; object-fit: cover;">
     </div>
     <div class="message">{{MSG}}</div>
 </div>
@@ -57,7 +38,7 @@ user_template = '''
 <div class="chat-message user">
     <div class="avatar">
         <img src="https://i.ibb.co/rdZC7LZ/Photo-logo-1.png">
-    </div>
+    </div>    
     <div class="message">{{MSG}}</div>
 </div>
 '''

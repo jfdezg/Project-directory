@@ -3,32 +3,34 @@ venv/
 env/
 .my-venv/
 my-venv/
-.venv/
+
+# Archivos de entorno
+.env
+.python-version
+
+# Archivos temporales / caché de Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+*.pkl
+
+# Archivos de compilación
+build/
+dist/
 *.egg-info/
 
-# Archivos de configuración y entorno
-.env
-*.env
-.env.*
+# IDEs y editores
+.vscode/
+.idea/
+*.swp
 
-# Datos temporales y almacenes de vectores
+# Datos generados
 vectorstore/
 *.db
-*.faiss
-
-# Archivos de logs y salida
 *.log
-*.tmp
 
-# Archivos del sistema
+# Otros
 .DS_Store
 Thumbs.db
-
-# Archivos de Visual Studio Code
-.vscode/
-
-# Archivos de Jupyter
-.ipynb_checkpoints/
-BKP/
+BKP

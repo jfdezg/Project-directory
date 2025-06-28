@@ -10,101 +10,60 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 
-VECTORSTORE_DIR = "vectorstore"
-
+# Cargar API Key
+load_dotenv()
+st.set_page_config(page_title="Chat con PDFs", page_icon="📄")
+st.write(css, unsafe_allow_html=True)
 
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
-        pdf_reader = PdfReader(pdf)
-        for page in pdf_reader.pages:
-            content = page.extract_text()
-            if content:
-                text += content
+        reader = PdfReader(pdf)
+        for page in reader.pages:
+            text += page.extract_text() or ""
     return text
 
-
 def get_text_chunks(text):
-    text_splitter = CharacterTextSplitter(
-        separator="\n",
-        chunk_size=1000,
-        chunk_overlap=200,
-        length_function=len
+    splitter = CharacterTextSplitter(
+        separator="\n", chunk_size=1000, chunk_overlap=200, length_function=len
     )
-    chunks = text_splitter.split_text(text)
-    return chunks
+    return splitter.split_text(text)
 
-
-def load_or_create_vectorstore(text_chunks=None):
-    if os.path.exists(VECTORSTORE_DIR):
-        vectorstore = FAISS.load_local(VECTORSTORE_DIR, OpenAIEmbeddings(), allow_dangerous_deserialization=True)
-    else:
-        if text_chunks is None:
-            return None
-        vectorstore = FAISS.from_texts(texts=text_chunks, embedding=OpenAIEmbeddings())
-        vectorstore.save_local(VECTORSTORE_DIR)
-    return vectorstore
-
-
-def update_vectorstore_with_new_chunks(new_chunks):
-    if not os.path.exists(VECTORSTORE_DIR):
-        return FAISS.from_texts(texts=new_chunks, embedding=OpenAIEmbeddings())
-
-    old_vectorstore = FAISS.load_local(VECTORSTORE_DIR, OpenAIEmbeddings(), allow_dangerous_deserialization=True)
-    new_vectorstore = FAISS.from_texts(texts=new_chunks, embedding=OpenAIEmbeddings())
-
-    old_vectorstore.merge_from(new_vectorstore)
-    old_vectorstore.save_local(VECTORSTORE_DIR)
-    return old_vectorstore
-
+def get_vectorstore(chunks):
+    embeddings = OpenAIEmbeddings()
+    return FAISS.from_texts(chunks, embeddings)
 
 def get_conversation_chain(vectorstore):
     llm = ChatOpenAI()
-    memory = ConversationBufferMemory(
-        memory_key='chat_history', return_messages=True)
-    conversation_chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
-        retriever=vectorstore.as_retriever(),
-        memory=memory
-    )
-    return conversation_chain
-
+    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+    return ConversationalRetrievalChain.from_llm(llm, vectorstore.as_retriever(), memory=memory)
 
 def handle_userinput(user_question):
-    response = st.session_state.conversation({'question': user_question})
-    st.session_state.chat_history = response['chat_history']
+    response = st.session_state.conversation({"question": user_question})
+    chat_history = response["chat_history"]
 
-    for i, message in enumerate(st.session_state.chat_history):
-        if i % 2 == 0:
-            st.write(user_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
-        else:
-            st.write(bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
+    for i, msg in enumerate(chat_history):
+        template = user_template if i % 2 == 0 else bot_template
+        st.write(template.replace("{{MSG}}", msg.content), unsafe_allow_html=True)
 
+# App principal
+st.header("Chat con múltiples PDFs 📄🤖")
 
-def main():
-    load_dotenv()
-    st.set_page_config(page_title="Chat with multiple PDFs", page_icon=":books:")
-    st.write(css, unsafe_allow_html=True)
+if "conversation" not in st.session_state:
+    st.session_state.conversation = None
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = None
 
-    if "conversation" not in st.session_state:
-        st.session_state.conversation = None
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = None
+question = st.text_input("Haz una pregunta sobre tus documentos:")
+if question:
+    handle_userinput(question)
 
-    st.header("Chat with multiple PDFs :books:")
-    user_question = st.text_input("Ask a question about your documents:")
-    if user_question and st.session_state.conversation:
-        handle_userinput(user_question)
-
-    with st.sidebar:
-        st.subheader("Your documents")
-        pdf_docs = st.file_uploader("Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
-        if st.button("Process") and pdf_docs:
-            with st.spinner("Processing"):
-                raw_text = get_pdf_text(pdf_docs)
-                text_chunks = get_text_chunks(raw_text)
-                updated_vectorstore = update_vectorstore_with_new_chunks(text_chunks)
-                st.session_state.conversation = get_conversation_chain(updated_vectorstore)
-
-if __name__ == '__main__':
-    main()
+with st.sidebar:
+    st.subheader("Tus documentos")
+    pdf_docs = st.file_uploader("Sube tus PDFs", accept_multiple_files=True)
+    if st.button("Procesar"):
+        with st.spinner("Leyendo PDFs..."):
+            raw_text = get_pdf_text(pdf_docs)
+            text_chunks = get_text_chunks(raw_text)
+            vectorstore = get_vectorstore(text_chunks)
+            st.session_state.conversation = get_conversation_chain(vectorstore)
